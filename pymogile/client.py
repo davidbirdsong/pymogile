@@ -12,10 +12,9 @@ from pymogile.file import NormalHTTPFile, LargeHTTPFile
 
 
 class Client(object):
-  def __init__(self, domain, trackers, readonly=False):
+  def __init__(self, trackers, readonly=False):
     """Create new Client object with the given list of trackers."""
     self.readonly = bool(readonly)
-    self.domain = domain
     self.backend = Backend(trackers, timeout=3)
 
   def run_hook(self, hookname, *args):
@@ -42,7 +41,7 @@ class Client(object):
     """
     return self.backend.last_host_connected
 
-  def new_file(self, key, cls=None, largefile=False, content_length=0,
+  def new_file(self, key, domain, cls=None, largefile=False, content_length=0,
                create_open_arg=None, create_close_arg=None, opts=None):
     """
     Start creating a new filehandle with the given key,
@@ -61,7 +60,7 @@ class Client(object):
 
     # fid should be specified, or pass 0 meaning to auto-generate one
     fid = 0
-    params = {'domain': self.domain,
+    params = {'domain': domain,
               'key': key,
               'fid': fid,
               'multi_dest': 1}
@@ -202,14 +201,14 @@ class Client(object):
 
     return len(content)
 
-  def get_paths(self, key, noverify=1, zone='alt', pathcount=2):
+  def get_paths(self, key, domain, noverify=1, zone='alt', pathcount=2):
     """
     Given a key, returns an array of all the locations (HTTP URLs) that the file
     has been replicated to.
     """
     self.run_hook('get_paths_start', key)
 
-    params = {'domain': self.domain,
+    params = {'domain': domain,
               'key': key,
               'noverify': noverify and 1 or 0,
               'zone': zone,
@@ -235,19 +234,19 @@ class Client(object):
     finally:
       fp.close()
 
-  def delete(self, key):
+  def delete(self, key, domain):
     """
     Delete a file from MogileFS
     """
     try:
       if self.readonly:
         return False
-      self.backend.do_request('delete', {'domain': self.domain, 'key': key})
+      self.backend.do_request('delete', {'domain': domain, 'key': key})
       return True
     except MogileFSError:
       return False
 
-  def rename(self, from_key, to_key):
+  def rename(self, from_key, to_key, domain):
     """
     Rename file (key) in MogileFS from oldkey to newkey.
     Returns true on success, failure otherwise
@@ -255,7 +254,7 @@ class Client(object):
     try:
       if self.readonly:
         return False
-      params =  {'domain': self.domain,
+      params =  {'domain': domain,
                  'from_key': from_key,
                  'to_key': to_key}
       self.backend.do_request('rename', params)
@@ -263,7 +262,7 @@ class Client(object):
     except MogileFSError:
       return False
 
-  def list_keys(self, prefix=None, after=None, limit=None):
+  def list_keys(self, domain, prefix=None, after=None, limit=None):
     """
     Used to get a list of keys matching a certain prefix.
 
@@ -281,7 +280,7 @@ class Client(object):
     When there are no more keys in the list,
     you will get back undef or an empty list
     """
-    params = {'domain': self.domain}
+    params = {'domain': domain}
     if prefix:
       params['prefix'] = prefix
     if after:
@@ -295,11 +294,11 @@ class Client(object):
       results.append(res['key_%d' % x])
     return results
 
-  def keys(self, prefix=None):
+  def keys(self, domain, prefix=None):
     """
     Get all keys matching a certain prefix
     """
-    params = {'domain': self.domain}
+    params = {'domain': domain}
     if prefix:
       params['prefix'] = prefix
     results = []
@@ -323,7 +322,7 @@ class Client(object):
     """
     raise NotImplementedError()
 
-  def update_class(self, key, new_class):
+  def update_class(self, domain, key, new_class):
     """
     Update the replication class of a pre-existing file,
     causing the file to become more or less replicated.
@@ -331,7 +330,7 @@ class Client(object):
     try:
       if self.readonly:
         return False
-      params = {"domain": self.domain,
+      params = {"domain": domain,
                 "key": key,
                 "class": new_class}
       res = self.backend.do_request("updateclass", params)
