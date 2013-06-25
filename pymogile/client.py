@@ -11,6 +11,7 @@ from pymogile.exceptions import MogileFSError
 from pymogile.file import NormalHTTPFile, LargeHTTPFile
 
 
+
 class Client(object):
   def __init__(self, domain, trackers, readonly=False):
     """Create new Client object with the given list of trackers."""
@@ -165,7 +166,7 @@ class Client(object):
     except MogileFSError:
       fp.close()
       return False
-    
+
     try:
       _bytes = 0
       while True:
@@ -360,4 +361,11 @@ class Client(object):
     expects as argument a tuple of ("standard-ip", "preferred-ip")
     """
     self.backend.set_pref_ip(*ips)
+
+class ReusableClient(Client):
+  def __init__(self, domain, backend, readonly=False):
+    """Create new Client object with the given list of trackers."""
+    self.readonly = bool(readonly)
+    self.domain = domain
+    self.backend = backend
 
