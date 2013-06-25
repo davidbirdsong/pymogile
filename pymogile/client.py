@@ -161,11 +161,7 @@ class Client(object):
 
     self.run_hook('store_file_start', params)
 
-    try:
-      new_file = self.new_file(key, cls)
-    except MogileFSError:
-      fp.close()
-      return False
+    new_file = self.new_file(key, cls)
 
     try:
       _bytes = 0
