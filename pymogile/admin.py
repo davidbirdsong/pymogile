@@ -408,3 +408,8 @@ class Admin(object):
 
     # return the created response
     return ret
+
+class ReusableAdmin(Admin):
+  def __init__(self, backend, readonly=False):
+    self.readonly = bool(readonly)
+    self.backend = backend
